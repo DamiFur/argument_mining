@@ -331,47 +331,6 @@ def main():
         out.write("Predictions:\n")
         out.write("{}".format(list(zip(list(val_inputs), pred_tags, valid_tags))))
 
-    # args = read_args()
-
-    # # Read dataset
-    # embeddings, mappings, data, datasets = load_dataset(args.dataset)
-
-    # print(embeddings)
-
-    # classifier_params = {
-    #     'classifier': args.classifier, 'LSTM-Size': args.num_units,
-    #     'dropout': args.dropout, 'charEmbeddingsSize': args.char_embedding_size,
-    #     'charEmbeddings': args.char_embedding, 'miniBatchSize': args.batch_size,
-    #     'earlyStopping': args.patience,
-    #     'attentionActivation': args.attention_activation,
-    # }
-    # print(classifier_params)
-
-    # attention_model = ATTENTION_MODELS.get(args.attention_model, None)
-    # print('Attention model: {}'.format(attention_model))
-    # if attention_model is None:
-    #     model = ArgBiLSTM(classifier_params)
-    # else:
-    #     model = attention_model(classifier_params)
-    # model.setMappings(mappings, embeddings)
-    # model.setDataset(datasets, data)
-    # # Path to store performance scores for dev / test
-    # if args.experiment_name is None:
-    #     results_filename = os.path.join(
-    #         args.output_dirpath,
-    #         '_'.join([args.classifier, str(args.char_embedding)] +
-    #                  [str(x) for x in args.num_units])
-    #     )
-    # else:
-    #     results_filename = os.path.join(args.output_dirpath,
-    #                                     args.experiment_name + "_results.txt")
-    # model.storeResults(results_filename)
-    # # Path to store models. We only want to store the best model found until
-    # # the moment
-    # model.modelSavePath = os.path.join(
-    #     args.output_dirpath, "{}_model.h5".format(args.experiment_name))
-    # model.fit(epochs=args.epochs)
-
 
 if __name__ == '__main__':
     main()
