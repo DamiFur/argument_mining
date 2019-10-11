@@ -1,7 +1,7 @@
 ATTENTION_MODEL=$1
 ATTENTION_ACTIVATION=$2
 
-for i in {0..26}; do
+for i in {7..26}; do
     echo "******************* EXPLORING SETTING $i ***************************"
 
     LSTM_UNITS=(30 50 100)

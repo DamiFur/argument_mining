@@ -306,7 +306,7 @@ class ArgBiLSTM(FixedSizeBiLSTM):
             if classifier == 'Softmax':
                 output = layers.TimeDistributed(
                     layers.Dense(n_class_labels, activation='softmax'),
-                    name=modelName+'_softmax')(output)
+                    name=modelName+'softmax')(output)
                 lossFct = 'sparse_categorical_crossentropy'
             elif classifier == 'CRF':
                 output = layers.TimeDistributed(

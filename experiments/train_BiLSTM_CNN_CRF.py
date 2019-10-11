@@ -11,9 +11,10 @@ import os
 import sys
 parent = os.path.abspath('..')
 sys.path.insert(0, parent)
-import utils
+from utils import pickle_from_file
 from models.arg_bilstm import ArgBiLSTM
 from models.att_arg_bilstm import TimePreAttArgBiLSTM, FeaturePreAttArgBiLSTM
+import tensorflow as tf
 
 ATTENTION_MODELS = {
     'time_pre': TimePreAttArgBiLSTM,
@@ -84,7 +85,7 @@ def read_args():
 
 
 def load_dataset(filename):
-    pickled_object = utils.pickle_from_file(filename)
+    pickled_object = pickle_from_file(filename)
     return (pickled_object['embeddings'], pickled_object['mappings'],
             pickled_object['data'], pickled_object['datasets'])
 
