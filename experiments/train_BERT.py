@@ -196,7 +196,7 @@ def main():
         optimizer_grouped_parameters = [{"params": [p for n, p in param_optimizer]}]
     optimizer = Adam(optimizer_grouped_parameters, lr=3e-5)
 
-    epochs = 5
+    epochs = 20
     max_grad_norm = 1.0
 
     for _ in trange(epochs, desc="Epoch"):
