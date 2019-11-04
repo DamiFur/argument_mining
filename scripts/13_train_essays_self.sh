@@ -14,7 +14,7 @@ mkdir $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY
 
 DATASET_NAME=$DATA_DIR/essays2_komninos_e.p
 # The model resulting from this command will be saved in --output_dirpath + --experiment_name _model.h5
-python -u experiments/train_SelfAtt_BiLSTM_CNN_CRF.py \
+KERAS_BACKEND=tensorflow python -u experiments/train_SelfAtt_BiLSTM_CNN_CRF.py \
     --dataset $DATASET_NAME \
     --output_dirpath $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY \
     --experiment_name essays \
@@ -28,13 +28,8 @@ python -u experiments/train_SelfAtt_BiLSTM_CNN_CRF.py \
     --num_units $6 $6
     # --n_heads $7 \
     # --attention_size $8
-# Now we need to evaluate the model
-MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY/essays*h5)
-#echo "********* Evaluating model $MODEL_NAME"
-#python -u experiments/run_SelfAtt_BiLSTM_CNN_CRF.py \
-#    --classifier $MODEL_NAME --dataset $DATASET_NAME \
-#    --output_dirname $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY \
-#    --experiment_name essays2
+
+if [ $? -ne 0 ]; then { echo "******** Training failed" ; exit 1; } fi
 
 echo "********** All experiments completed"
 mv $RESULT_DIRECTORY/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/$DATE

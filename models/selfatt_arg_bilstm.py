@@ -1,9 +1,14 @@
 """BiLSTM models for argument mining with self-attention mechanism
 """
 
-import numpy
 import keras.backend as K
+import json
+import h5py
+import logging
+import numpy
+import os
 import tensorflow as tf
+
 from keras import optimizers, layers
 from keras.models import Model
 from keras.initializers import Ones, Zeros
@@ -31,7 +36,8 @@ class LayerNormalization(layers.Layer):
 
 # It's safe to use a 1-d mask for self-attention
 class ScaledDotProductAttention():
-    def __init__(self, attn_dropout=0.1):
+    def __init__(self, attn_dropout=0.1, n_heads=4):
+        self.n_heads = n_heads
         self.dropout = layers.Dropout(attn_dropout, name='attention_matrix')
 
     def __call__(self, q, k, v, mask):   # mask_k or mask_qk
@@ -40,10 +46,24 @@ class ScaledDotProductAttention():
         attn = layers.Lambda(
             lambda x: K.batch_dot(x[0], x[1], axes=[2,2]) / temper)([q, k])
         if mask is not None:
-            mmask = layers.Lambda(lambda x: (-1e+9) * (1.-K.cast(x, 'float32')))(mask)
+            mmask = layers.Lambda(
+                lambda x: (-1e+9) * (1.-K.cast(x, 'float32')))(mask)
             attn = layers.Add()([attn, mmask])
         attn = layers.Activation('softmax')(attn)
+        # Reshape to use as model output when predicting with attention
+        # This reshaping does absolutely nothing, because we go back to the 
+        # original shape after applying the dropout. However, if you want to 
+        # extract the value of the attention as a network output, i) the first
+        # dimension MUST have shape batch_size and ii) the exact output must be
+        # used in the calculation of the loss somehow, otherwise it is not
+        # included in the model.
+        original_shape = tf.shape(attn)  # [batch_size*heads, ts, ts] 
+        def reshape3(x):
+            return tf.reshape(x, [-1, self.n_heads,
+                              original_shape[-1], original_shape[-1]])
+        attn = layers.Lambda(reshape3, name='attention_scores')(attn)
         attn = self.dropout(attn)
+        attn = layers.Lambda(lambda x: tf.reshape(x, original_shape))(attn)
         output = layers.Lambda(lambda x: K.batch_dot(x[0], x[1]))([attn, v])
         return output, attn
 
@@ -76,7 +96,7 @@ class MultiHeadAttention():
                     layers.Dense(d_k, use_bias=False)))
                 self.vs_layers.append(layers.TimeDistributed(
                     layers.Dense(d_v, use_bias=False)))
-        self.attention = ScaledDotProductAttention()
+        self.attention = ScaledDotProductAttention(n_heads=n_head)
         self.w_o = layers.TimeDistributed(layers.Dense(d_model))
 
     def __call__(self, q, k, v, mask=None):
@@ -110,7 +130,7 @@ class MultiHeadAttention():
                 # [batch_size, len_v, n_head * d_v]
                 x = tf.reshape(x, [-1, s[1], n_head*d_v])
                 return x
-            head = layers.Lambda(reshape2)(head)
+            head = layers.Lambda(reshape2, name='l_reshape2')(head)
         elif self.mode == 1:
             heads = []; attns = []
             for i in range(n_head):
@@ -160,11 +180,11 @@ class SelfAttArgBiLSTM(ArgBiLSTM):
         attention_dropout = 0.1 # TODO put this as a parameter
         self_att_layer = MultiHeadAttention(
             self.n_heads, self.attention_size, dropout=attention_dropout)
-        output, self_attention = self_att_layer(
+        output, self.self_attention = self_att_layer(
             merged_input, merged_input, merged_input)
-        # TODO extract self_attention somehow
 
         # TODO: Residual encoding - decide if to include or not.
+        # If included, merged_input must have the same number of cells as output
         # norm_layer = LayerNormalization()
         # output = norm_layer(layers.Add()([merged_input, output]))
 
@@ -173,3 +193,51 @@ class SelfAttArgBiLSTM(ArgBiLSTM):
         #     self.attention_size, self.attention_size*2, dropout=attention_dropout)
         # output = pos_ffn_layer(output)
         return output
+
+    def label_and_attention(self, model, input_):
+        """Classifies the sequences in input_ and returns the attention score.
+
+        Args:
+            model: a Keras model
+            input_: a list of array representation of sentences.
+
+        Returns:
+            A tuple where the first element is the attention scores for each
+            sentence, and the second is the model predictions.
+        """
+        layer = model.get_layer('attention_matrix')
+        # Attention output has shape (batch_size*heads,timesteps,timesteps)
+        attention_model = Model(
+            inputs=model.input, outputs=[model.output, layer.output])
+        # The attention output is (batch_size, timesteps, features)
+        return attention_model.predict(input_)
+
+    def saveModel(self, modelName, epoch, dev_score, test_score):
+        """Saves the model's weights into self.modelSavePath
+
+        Overwrite of original because we need to save only the weights. Trying
+        to save the architechture raises and error.
+
+        TODO: save both architecture and weights.
+        """
+
+        if self.modelSavePath == None:
+            raise ValueError('modelSavePath not specified.')
+
+        savePath = self.modelSavePath
+
+        directory = os.path.dirname(savePath)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        self.models[modelName].save_weights(savePath, True)
+
+        with h5py.File(savePath, 'a') as h5file:
+            h5file.attrs['mappings'] = json.dumps(self.mappings)
+            h5file.attrs['params'] = json.dumps(self.params)
+            h5file.attrs['modelName'] = modelName
+            h5file.attrs['labelKey'] = self.datasets[modelName]['label']
+
+    @staticmethod
+    def loadModel(modelPath):
+        raise NotImplementedError('Build the model and then load weights.')
