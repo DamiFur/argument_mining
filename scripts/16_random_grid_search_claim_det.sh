@@ -1,7 +1,7 @@
 ATTENTION_MODEL=$1
 ATTENTION_ACTIVATION=$2
 
-for i in 1 2 3 4 5 6 7 8 9 10; do
+for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
     CHAR_EMB=(lstm None cnn)
     rand_char_emb=${CHAR_EMB[$[$RANDOM % ${#CHAR_EMB[@]}]]}
@@ -27,7 +27,7 @@ for i in 1 2 3 4 5 6 7 8 9 10; do
     rand_batch_size=${BATCH_SIZE[$[$RANDOM % ${#BATCH_SIZE[@]}]]}
     echo "Batch size" $rand_batch_size
 
-    bash scripts/08_explore_echr_attention.sh $rand_char_emb $rand_char_emb_size \
+    bash scripts/17_explore_echr_claim_detection_attention.sh $rand_char_emb $rand_char_emb_size \
         $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units \
         $ATTENTION_MODEL $ATTENTION_ACTIVATION
 done

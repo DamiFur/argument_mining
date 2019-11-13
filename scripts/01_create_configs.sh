@@ -1,4 +1,4 @@
-DATA_DIR="../data/echr/annotation/for_training"
+DATA_DIR="../data/echr/for_training"
 
 FILES=( $(ls $DATA_DIR | sed 's/.\{4\}$//' | uniq) )
 PARTITION_NUMBER=0

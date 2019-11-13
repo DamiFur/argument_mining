@@ -2,31 +2,29 @@
 # argument mining folder
 
 DATE=$(date +%y-%m-%d-%H-%M)
-RESULT_DIRECTORY="../results/ukpnets"
+RESULT_DIRECTORY="../results/echr/claim_detection"
 EXPERIMENT_DIRECTORY="ongoing-"$DATE
-RELATIONS=""
-SEPARATION_LEVEL="claim-det-paragraph"
-DATA_DIR="../data/echr/annotation/for_training"
+SEPARATION_LEVEL="paragraph"
+DATA_DIR="../data/echr/for_exploration"
 echo "******** Starting experiment $DATE"
 echo "******** Using relation suffix $RELATIONS"
 ATTENTION_MODEL=$7
 ATTENTION_ACTIVATION=$8
 echo "******** Using attention " $ATTENTION_MODEL " " $ATTENTION_ACTIVATION
 
-
-mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/
-mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY
+mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}/
+mkdir $RESULT_DIRECTORY/${SEPARATION_LEVEL}/$EXPERIMENT_DIRECTORY
 for PARTITION_DIR in $(compgen -f $DATA_DIR/partition)
 do
     PARTITION=$(basename $PARTITION_DIR)
     echo "******** Training on $PARTITION"
-    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}${RELATIONS}/ukp-claim-det*.p)
+    DATASET_NAME=$(compgen -f $PARTITION_DIR/${SEPARATION_LEVEL}/echr_claim_detection_komninos_e.p)
     # The model resulting from this command will be saved in --output_dirpath + --experiment_name _model.h5
     python -u experiments/train_BiLSTM_CNN_CRF.py \
         --dataset $DATASET_NAME \
         --attention_model $ATTENTION_MODEL \
         --attention_activation $ATTENTION_ACTIVATION \
-        --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
+        --output_dirpath $RESULT_DIRECTORY/${SEPARATION_LEVEL}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION \
         --char_embedding $1 \
         --char_embedding_size $2 \
@@ -37,14 +35,15 @@ do
         --batch_size $5 \
         --num_units $6 $6
     # Now we need to evaluate the model
-    MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
+    MODEL_NAME=$(compgen -f $RESULT_DIRECTORY/${SEPARATION_LEVEL}/$EXPERIMENT_DIRECTORY/$PARTITION*h5)
     echo "********* Evaluating model $MODEL_NAME"
     python -u experiments/run_BiLSTM_CNN_CRF.py \
         --classifier $MODEL_NAME --dataset $DATASET_NAME \
         --attention_model $ATTENTION_MODEL \
-        --output_dirname $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY \
+        --output_dirname $RESULT_DIRECTORY/${SEPARATION_LEVEL}/$EXPERIMENT_DIRECTORY \
         --experiment_name $PARTITION
 done
 
 echo "********** All experiments completed"
-mv $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/${SEPARATION_LEVEL}${RELATIONS}/$DATE
+mv $RESULT_DIRECTORY/${SEPARATION_LEVEL}/$EXPERIMENT_DIRECTORY $RESULT_DIRECTORY/${SEPARATION_LEVEL}/$DATE
+

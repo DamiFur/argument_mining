@@ -7,12 +7,15 @@ under the name ukplab_nets and add it the path to PYTHONPATH.
 
 import argparse
 import logging
+import numpy
 import os
+import pandas
 import sys
 parent = os.path.abspath('..')
 sys.path.insert(0, parent)
 import utils
 from models.selfatt_arg_bilstm import SelfAttArgBiLSTM
+from sklearn import metrics
 
 
 loggingLevel = logging.INFO
@@ -95,8 +98,7 @@ def main():
         'dropout': args.dropout, 'charEmbeddingsSize': args.char_embedding_size,
         'charEmbeddings': args.char_embedding, 'miniBatchSize': args.batch_size,
         'earlyStopping': args.patience,
-        'n_heads': 4, # args.n_heads,
-        'attention_size': 256 # args.attention_size
+        'n_heads':  args.n_heads,  'attention_size': args.attention_size
     }
     print(classifier_params)
 
@@ -117,8 +119,8 @@ def main():
     model.storeResults(results_filename)
     # Path to store models. We only want to store the best model found until
     # the moment
-    model.modelSavePath = None #os.path.join(
-    #    args.output_dirpath, "{}_model.h5".format(args.experiment_name))
+    model.modelSavePath = os.path.join(
+        args.output_dirpath, "{}_model.h5".format(args.experiment_name))
     model.fit(epochs=args.epochs)
 
     dataset_name = [x for x in data.keys()][0]  # I hate python 3

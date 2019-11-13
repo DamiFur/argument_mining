@@ -1,5 +1,5 @@
 SEPARATION_LEVEL="paragraph"
-DATA_DIR="../../data/echr/annotation/for_training"
+DATA_DIR="../../data/echr/for_training"
 
 cd preprocess
 

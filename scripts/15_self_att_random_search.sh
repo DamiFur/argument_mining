@@ -1,7 +1,8 @@
-ATTENTION_MODEL=$1
-ATTENTION_ACTIVATION=$2
+HEADS=$1
 
-for i in 1 2 3 4 5 6 7 8 9 10; do
+echo "Attention heads " $HEADS
+
+for i in 1 2 3 4 5; do
     echo "******************* EXPLORING SETTING $i ***************************"
     CHAR_EMB=(lstm None cnn)
     rand_char_emb=${CHAR_EMB[$[$RANDOM % ${#CHAR_EMB[@]}]]}
@@ -27,7 +28,11 @@ for i in 1 2 3 4 5 6 7 8 9 10; do
     rand_batch_size=${BATCH_SIZE[$[$RANDOM % ${#BATCH_SIZE[@]}]]}
     echo "Batch size" $rand_batch_size
 
-    bash scripts/08_explore_echr_attention.sh $rand_char_emb $rand_char_emb_size \
+    ATTENTION_SIZE=(32 64 128)
+    rand_attention_size=${ATTENTION_SIZE[$[$RANDOM % ${#ATTENTION_SIZE[@]}]]}
+    echo "Attention size" $rand_attention_size
+
+    bash scripts/14_train_echr_self.sh $rand_char_emb $rand_char_emb_size \
         $rand_classifier $rand_dropout $rand_batch_size $rand_lstm_units \
-        $ATTENTION_MODEL $ATTENTION_ACTIVATION
+        $HEADS $rand_attention_size
 done
