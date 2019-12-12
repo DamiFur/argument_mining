@@ -260,7 +260,7 @@ def train(train_dataset, model, tokenizer, labels, pad_token_label_id, dev_datal
     train_sampler = RandomSampler(train_dataset)
     train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=train_batch_size)
 
-    num_train_epochs = 2.0
+    num_train_epochs = 40.0
     t_total = len(train_dataloader) // num_train_epochs
 
     # Prepare optimizer and schedule (linear warmup and decay)
@@ -315,7 +315,7 @@ def train(train_dataset, model, tokenizer, labels, pad_token_label_id, dev_datal
     return global_step, train_loss_timeline, eval_loss_timeline
 
 
-data = pd.read_csv("../train_mm.txt", sep='\t', encoding="latin1").fillna(method="ffill")
+data = pd.read_csv("train_mm.txt", sep='\t', encoding="latin1").fillna(method="ffill")
 
 getter = SentenceGetter(data)
 #Sacarle las oraciones que empiezan con "<", el autor, abstract, etc
@@ -359,7 +359,7 @@ with torch.cuda.device(n_gpu):
     train_dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_label_ids)
 
 
-devdata = pd.read_csv("../dev_mm.txt", sep='\t', encoding="latin1").fillna(method="ffill")
+devdata = pd.read_csv("dev_mm.txt", sep='\t', encoding="latin1").fillna(method="ffill")
 
 getter = SentenceGetter(devdata)
 
@@ -409,3 +409,5 @@ with torch.cuda.device(n_gpu):
 fig, ax = plt.subplots()
 ax.plot(np.arange(len(train_loss_timeline)), train_loss_timeline, label="train")
 ax.plot(np.arange(len(dev_loss_timeline)), dev_loss_timeline, label="dev")
+
+fig.savefig("loss_train_eval.png")
